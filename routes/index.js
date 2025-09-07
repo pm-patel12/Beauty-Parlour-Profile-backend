@@ -19,4 +19,9 @@ router.post("/logout", checkJwtAuthentication, (req, res) =>
   AuthController.logoutUser(req, res)
 );
 
+// Profile api
+router.get("/profile", checkJwtAuthentication, (req, res) =>
+  AuthController.getProfile(req, res)
+);
+
 module.exports = router;

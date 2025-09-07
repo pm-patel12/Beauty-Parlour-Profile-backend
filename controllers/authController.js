@@ -7,7 +7,6 @@ const saltRounds = 10;
 const {
   Exception,
   loginFailed,
-  loginSuccess,
   successDetails,
 } = require("../utils/exceptionHandler");
 
@@ -29,16 +28,31 @@ class AuthController {
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return loginFailed(res, 401, "Invalid password");
+        return loginFailed(res, 404, "Invalid password");
       }
 
       // 🔑 generate a new token for every login (for admin + user)
       const token = jwt.sign({ id: user._id, role: user.role }, secret);
-
-      user.token = token; // update DB with new token
+      const refreshToken = jwt.sign({ id: user._id, role: user.role }, secret);
+      user.token = token;
       await user.save();
 
-      return loginSuccess(res, user, 200, "User login successful", token);
+      const userData = {
+        id: user._id,
+        fullName: user.fullName,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+      };
+
+      return res.status(200).json({
+        success: true,
+        msg: "User login successfully",
+        data: {
+          access_token: token,
+          refresh_token: refreshToken,
+          user: userData,
+        },
+      });
     } catch (err) {
       return Exception(res, 500, "Something went wrong during login", err);
     }
@@ -76,6 +90,10 @@ class AuthController {
 
       // 🔑 generate token on registration (for admin + user)
       const token = jwt.sign({ phoneNumber, role: role || "user" }, secret);
+      const refreshToken = jwt.sign(
+        { phoneNumber, role: role || "user" },
+        secret
+      );
 
       const newUser = await UserRegisterSchema.create({
         fullName,
@@ -85,7 +103,22 @@ class AuthController {
         token,
       });
 
-      return successDetails(res, 201, "User registered successfully", newUser);
+      const userData = {
+        id: newUser._id,
+        fullName: newUser.fullName,
+        phoneNumber: newUser.phoneNumber,
+        role: newUser.role,
+      };
+
+      return res.status(201).json({
+        success: true,
+        msg: "User registered successfully",
+        data: {
+          access_token: token,
+          refresh_token: refreshToken,
+          user: userData,
+        },
+      });
     } catch (err) {
       return Exception(
         res,
@@ -112,6 +145,40 @@ class AuthController {
       return successDetails(res, 200, "User logged out successfully");
     } catch (err) {
       return Exception(res, 500, "Something went wrong during logout", err);
+    }
+  }
+
+  // Profile api
+  async getProfile(req, res) {
+    try {
+      const user = await UserRegisterSchema.findById(req.user.id).select(
+        "-password -__v"
+      );
+      if (!user) {
+        return loginFailed(res, 404, "User not found");
+      }
+
+      return res.status(200).json({
+        success: true,
+        msg: "User profile fetched successfully",
+        data: {
+          user: {
+            id: user._id,
+            fullName: user.fullName,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          },
+        },
+      });
+    } catch (err) {
+      return Exception(
+        res,
+        500,
+        "Something went wrong while fetching profile",
+        err
+      );
     }
   }
 }
