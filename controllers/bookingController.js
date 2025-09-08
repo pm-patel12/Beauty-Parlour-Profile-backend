@@ -6,8 +6,6 @@ class BookingController {
   async createBooking(req, res) {
     try {
       const { storeId } = req.params;
-      console.log(storeId,'storeId');
-      
       const { name, phoneNumber, email, date, startTime, endTime } = req.body;
 
       if (!name || !phoneNumber || !date || !startTime || !endTime) {
@@ -49,7 +47,16 @@ class BookingController {
   async getBookingsByStore(req, res) {
     try {
       const { storeId } = req.params;
+      const store = await Store.findById(storeId);
+      if (!store) {
+        return Exception(res, 404, "Store not found");
+      }
+
       const bookings = await Booking.find({ store: storeId });
+
+      if (!bookings || bookings.length === 0) {
+        return storeSuccess(res, 200, "No bookings found", []);
+      }
 
       return storeSuccess(res, 200, "Bookings fetched successfully", bookings);
     } catch (err) {
