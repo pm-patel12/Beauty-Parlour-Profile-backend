@@ -57,6 +57,83 @@ class ServiceController {
       );
     }
   }
+
+  // Update a service
+  async editService(req, res) {
+    try {
+      const userId = req.user.id;
+      const { storeId, serviceId } = req.params;
+      const { service_name, service_description, service_price } = req.body;
+
+      // Check store ownership
+      const store = await Store.findOne({ _id: storeId, user: userId });
+      if (!store) {
+        return Exception(res, 404, "Store not found");
+      }
+
+      // Check if the service belongs to this store
+      const service = await Service.findOne({ _id: serviceId, store: storeId });
+      if (!service) {
+        return Exception(res, 404, "Service not found in this store");
+      }
+
+      // Update the service
+      service.service_name = service_name || service.service_name;
+      service.service_description =
+        service_description || service.service_description;
+      service.service_price = service_price || service.service_price;
+
+      await service.save();
+
+      return storeSuccess(res, 200, "Service updated successfully", service);
+    } catch (err) {
+      return Exception(
+        res,
+        500,
+        "Something went wrong while updating service",
+        err
+      );
+    }
+  }
+
+  // Delete a service
+  async deleteService(req, res) {
+    try {
+      const userId = req.user.id;
+      const { storeId, serviceId } = req.params;
+
+      // Check store ownership
+      const store = await Store.findOne({ _id: storeId, user: userId });
+
+      if (!store) {
+        return Exception(res, 404, "Store not found");
+      }
+
+      // Check if the service belongs to this store
+      const service = await Service.findOne({ _id: serviceId, store: storeId });
+      if (!service) {
+        return Exception(res, 404, "Service not found in this store");
+      }
+
+      // Delete the service
+      await Service.deleteOne({ _id: serviceId });
+
+      // Remove service reference from store.services array
+      store.services = store.services.filter(
+        (id) => id.toString() !== serviceId.toString()
+      );
+      await store.save();
+
+      return storeSuccess(res, 200, "Service deleted successfully");
+    } catch (err) {
+      return Exception(
+        res,
+        500,
+        "Something went wrong while deleting services",
+        err
+      );
+    }
+  }
 }
 
 module.exports = new ServiceController();

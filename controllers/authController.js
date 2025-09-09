@@ -181,6 +181,81 @@ class AuthController {
       );
     }
   }
+
+  // Update Profile
+  async updateProfile(req, res) {
+    try {
+      const { fullName, phoneNumber, password, confirmPassword } = req.body;
+
+      // Find user
+      const user = await UserRegisterSchema.findById(req.user.id);
+      if (!user) {
+        return loginFailed(res, 404, "User not found");
+      }
+
+      // Update fields only if provided
+      if (fullName) user.fullName = fullName;
+
+      if (phoneNumber) {
+        const existingUser = await UserRegisterSchema.findOne({
+          phoneNumber,
+          _id: { $ne: user._id },
+        });
+
+        if (existingUser) {
+          return Exception(
+            res,
+            409,
+            "Phone number already in use by another account"
+          );
+        }
+        user.phoneNumber = phoneNumber;
+      }
+
+      // Handle password update
+      if (password || confirmPassword) {
+        if (password !== confirmPassword) {
+          return Exception(
+            res,
+            400,
+            "Password and confirm password do not match"
+          );
+        }
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        user.password = hashedPassword;
+      }
+
+      await user.save();
+
+      const access_token =
+        req.headers.authorization?.split(" ")[1] || user.token;
+      const refresh_token = req.body.refresh_token || null;
+
+      const userData = {
+        id: user._id,
+        fullName: user.fullName,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+      };
+
+      return res.status(200).json({
+        success: true,
+        msg: "Profile updated successfully",
+        data: {
+          access_token,
+          refresh_token,
+          user: userData,
+        },
+      });
+    } catch (err) {
+      return Exception(
+        res,
+        500,
+        "Something went wrong while updating profile",
+        err
+      );
+    }
+  }
 }
 
 module.exports = new AuthController();

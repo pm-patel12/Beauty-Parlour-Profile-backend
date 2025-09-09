@@ -7,6 +7,20 @@ const authMiddleware = require("../authentication");
 router.post("/:storeId", authMiddleware, ServiceController.addService);
 
 // Get services by store
-router.get("/:storeId", ServiceController.getServicesByStore);
+router.get("/:storeId", authMiddleware, ServiceController.getServicesByStore);
+
+// Update service
+router.put(
+  "/:storeId/:serviceId",
+  authMiddleware,
+  ServiceController.editService
+);
+
+// Delete services by store
+router.delete(
+  "/:storeId/:serviceId",
+  authMiddleware,
+  ServiceController.deleteService
+);
 
 module.exports = router;

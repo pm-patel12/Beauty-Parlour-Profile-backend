@@ -24,4 +24,8 @@ router.get("/profile", checkJwtAuthentication, (req, res) =>
   AuthController.getProfile(req, res)
 );
 
+router.put("/profile", checkJwtAuthentication, (req, res) =>
+  AuthController.updateProfile(req, res)
+);
+
 module.exports = router;
