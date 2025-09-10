@@ -66,6 +66,10 @@ const StoreSchema = new mongoose.Schema(
         ref: "Booking",
       },
     ],
+    is_active: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
