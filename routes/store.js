@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const StoreController = require("../controllers/StoreController");
+const StoreController = require("../controllers/storeController");
 const authMiddleware = require("../authentication");
 
 router.get("/allStores", authMiddleware, StoreController.getAllStores);
