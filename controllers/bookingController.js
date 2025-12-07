@@ -65,21 +65,24 @@ class BookingController {
       }
 
       const existingBookings = await Booking.find({
-        _id: { $in: store.bookings },
+        store: storeId,
+        date: date,
       });
-      console.log(existingBookings, "existingBookings");
-      const hasConflict = existingBookings.some((b) => {
-        if (b.date !== date) return false;
+
+      const overlappingBookings = existingBookings.filter((b) => {
         const existingStart = toMinutes(b.startTime);
         const existingEnd = toMinutes(b.endTime);
         return bookingStart < existingEnd && bookingEnd > existingStart;
       });
 
-      if (hasConflict) {
+      const storeCapacity = store.capacity || 1;
+      if (overlappingBookings.length >= storeCapacity) {
         return Exception(
           res,
           400,
-          `Another booking already exists between this time on ${date}`
+          `Booking slot is full. Maximum capacity (${storeCapacity} seat${
+            storeCapacity > 1 ? "s" : ""
+          }) has been reached for this time slot on ${date}. Please choose a different time.`
         );
       }
 

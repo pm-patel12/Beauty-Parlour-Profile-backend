@@ -23,6 +23,7 @@ class StoreController {
         starting_hour,
         ending_hour,
         working_days,
+        capacity,
       } = req.body;
 
       if (
@@ -50,6 +51,7 @@ class StoreController {
           starting_hour,
           ending_hour,
           working_days,
+          capacity,
         },
         { new: true, upsert: true }
       );

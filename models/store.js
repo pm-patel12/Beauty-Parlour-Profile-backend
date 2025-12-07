@@ -54,6 +54,11 @@ const StoreSchema = new mongoose.Schema(
         "sunday",
       ],
     },
+    capacity: {
+      type: Number,
+      required: false,
+      min: 1,
+    },
     services: [
       {
         type: mongoose.Schema.Types.ObjectId,
