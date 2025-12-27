@@ -1,12 +1,14 @@
 const Booking = require("../models/booking");
 const Store = require("../models/store");
 const { Exception, storeSuccess } = require("../utils/exceptionHandler");
+const Service = require("../models/service");
 
 class BookingController {
   async createBooking(req, res) {
     try {
       const { storeId } = req.params;
-      const { name, phoneNumber, email, date, startTime, endTime } = req.body;
+      const { name, phoneNumber, email, date, startTime, endTime, services } =
+        req.body;
 
       if (!name || !phoneNumber || !date || !startTime || !endTime) {
         return Exception(res, 400, "All required fields must be provided");
@@ -15,6 +17,19 @@ class BookingController {
       // Check store exists
       const store = await Store.findById(storeId);
       if (!store) return Exception(res, 404, "Store not found");
+
+      const validServices = await Service.find({
+        _id: { $in: services },
+        store: storeId,
+      });
+
+      if (validServices.length !== services.length) {
+        return Exception(
+          res,
+          400,
+          "One or more selected services are invalid for this store"
+        );
+      }
 
       const [day, month, year] = date.split("/").map(Number);
       const parsedDate = new Date(Date.UTC(year, month - 1, day));
@@ -89,6 +104,7 @@ class BookingController {
       // Create booking
       const booking = await Booking.create({
         store: store._id,
+        services,
         name,
         phoneNumber,
         email,
@@ -122,7 +138,12 @@ class BookingController {
         return Exception(res, 404, "Store not found");
       }
 
-      const bookings = await Booking.find({ store: storeId });
+      const bookings = await Booking.find({ store: storeId })
+        .populate({
+          path: "services",
+          select: "service_name service_price service_description",
+        })
+        .lean();
 
       if (!bookings || bookings.length === 0) {
         return storeSuccess(res, 200, "No bookings found", []);

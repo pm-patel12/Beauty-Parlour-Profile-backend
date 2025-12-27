@@ -20,6 +20,8 @@ class StoreController {
         country,
         business_contact_number,
         business_email,
+        facebookUrl,
+        instagramUrl,
         starting_hour,
         ending_hour,
         working_days,
@@ -48,6 +50,8 @@ class StoreController {
           country,
           business_contact_number,
           business_email,
+          instagramUrl,
+          facebookUrl,
           starting_hour,
           ending_hour,
           working_days,
@@ -200,7 +204,6 @@ class StoreController {
   async deleteStore(req, res) {
     try {
       const { storeId } = req.params;
-      console.log(storeId, "storeId");
       if (!storeId) {
         return Exception(res, 400, "Store ID is required");
       }

@@ -33,6 +33,14 @@ const StoreSchema = new mongoose.Schema(
     business_email: {
       type: String,
     },
+    facebookUrl: {
+      type: String,
+      default: null,
+    },
+    instagramUrl: {
+      type: String,
+      default: null,
+    },
     starting_hour: {
       type: String,
       required: true,

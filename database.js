@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
-// console.log(process.env.MONGO_URL, "data mongo");
 
 const connection = mongoose
   .connect(process.env.MONGO_URL, {
